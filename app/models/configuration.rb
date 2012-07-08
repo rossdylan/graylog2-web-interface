@@ -2,6 +2,7 @@ class Configuration
   @general_config = YAML::load File.read(Rails.root.to_s + "/config/general.yml")
   @email_config = YAML::load File.read(Rails.root.to_s + "/config/email.yml")
   @indexer_config = YAML::load File.read(Rails.root.to_s + "/config/indexer.yml")
+  @ldap_config = YAML::load File.read(Rails.root.to_s + "/config/ldap.yml")
 
   def self.config_value(root, nesting, key, default = nil)
     [root, root[nesting.to_s], root[nesting.to_s][key.to_s]].any?(&:blank?) ? default : root[nesting.to_s][key.to_s]
@@ -110,6 +111,14 @@ class Configuration
     return token
   end
 
+  def self.ldap_config(key = nil, default = nil)
+    if key
+      config_value @ldap_config, Rails.env, key, default
+    else
+      @ldap_config[Rails.env]
+    end
+  end
+
   def self.email_config(key = nil, default = nil)
     if key
       config_value @email_config, Rails.env, key, default
@@ -124,6 +133,23 @@ class Configuration
     else
       @indexer_config[Rails.env]
     end
+  end
+
+  def self.ldap_host
+    ldap_config :host
+  end
+
+  def self.ldap_port
+    port = ldap_config :port
+    port.to_i
+  end
+
+  def self.ldap_base
+    ldap_config :base
+  end
+
+  def self.ldap_email_base
+    ldap_config :emailbase
   end
 
   def self.email_transport_type
