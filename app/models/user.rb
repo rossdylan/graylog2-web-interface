@@ -59,7 +59,7 @@ class User
   def self.authenticate_ldap(login, password)
     return nil if login.blank? || password.blank?
     username = "uid=#{login}, #{Configuration.ldap_base}"
-    ldap = net::LDAP.new :host=> Configuration.ldap_host, :port => Configuration.ldap_port
+    ldap = Net::LDAP.new :host=> Configuration.ldap_host, :port => Configuration.ldap_port
     ldap.auth username password
     if ldap.bind
       u = find_by_login(login)
