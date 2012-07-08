@@ -78,7 +78,12 @@ class User
   end
 
   def self.authenticate(login, password)
-    return authenticate_db(login, password) if authenticate_ldap(login, password) == nil
+    ldap_result = authenticate_ldap(login, password)
+    if ldap_result != nil
+      return ldap_result
+    else
+      return authenticate_db(login, password)
+    end
   end
 
   def self.find_by_id(_id)
