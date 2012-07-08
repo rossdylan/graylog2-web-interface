@@ -1,0 +1,4 @@
+host: ldap.example.com
+port: 389
+base: ou=Users,dc=example,dc=com
+emailbase: example.com
