@@ -1,4 +1,5 @@
 require 'digest/sha1'
+require 'net/ldap'
 
 class User
   include Mongoid::Document
@@ -49,10 +50,35 @@ class User
   # We really need a Dispatch Chain here or something.
   # This will also let us return a human error message.
   #
-  def self.authenticate(login, password)
+  def self.authenticate_db(login, password)
     return nil if login.blank? || password.blank?
     u = find_by_login(login.downcase) # need to get the salt
     u && u.authenticated?(password) ? u : nil
+  end
+
+  def self.authenticate_ldap(login, password)
+    return nil if login.blank? || password.blank?
+    username = "uid=#{login}, #{Configuration.ldap_base}"
+    ldap = net::LDAP.new :host=> Configuration.ldap_host, :port => Configuration.ldap_port
+    ldap.auth username password
+    if ldap.bind
+      u = find_by_login(login)
+      if u
+        return u
+      else
+        fullname = ""
+        ldap.search(:base => Configuration.ldap_base, :filter => Net::LDAP::Filter.eq("uid",login)) do |entry|
+          fullname = entry.cn
+        end
+        return User.new(:login => login, :email => "#{login}@#{Configuration.ldap_email_base}", :name => fullname, :password => nil, :password_confirmation => nil, :role => "reader")
+      end
+    else
+      return nil
+    end
+  end
+
+  def self.authenticate(login, password)
+    return authenticate_db(login, password) if authenticate_ldap(login, password) == nil
   end
 
   def self.find_by_id(_id)
