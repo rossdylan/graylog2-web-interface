@@ -60,7 +60,7 @@ class User
     return nil if login.blank? || password.blank?
     username = "uid=#{login}, #{Configuration.ldap_base}"
     ldap = Net::LDAP.new :host=> Configuration.ldap_host, :port => Configuration.ldap_port
-    ldap.auth username password
+    ldap.auth username, password
     if ldap.bind
       u = find_by_login(login)
       if u
